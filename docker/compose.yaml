@@ -27,13 +27,11 @@ services:
   redis:
     build: redis_build
     container_name: astk_redis
-    tty: true
-    command: ["bash", "-c", "tail -f /dev/null"]
     hostname: redis_dev
-    network_mode: host
     dns: 8.8.8.8
     ports:
       - "6379:6379"
+    restart: always
 
   node:
     build: docker_file
