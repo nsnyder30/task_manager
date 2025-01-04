@@ -1,0 +1,58 @@
+version: '3.9'
+services:
+  db:
+    image: mysql:8.0
+    container_name: astk_mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: task_manager
+      MYSQL_USER: task_user
+      MYSQL_PASSWORD: taskpass
+    volumes:
+      - db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: astk_phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: rootpass
+    depends_on:
+      - db
+
+  redis:
+    build: redis_build
+    container_name: astk_redis
+    tty: true
+    command: ["bash", "-c", "tail -f /dev/null"]
+    hostname: redis_dev
+    network_mode: host
+    dns: 8.8.8.8
+    ports:
+      - "6379:6379"
+
+  node:
+    build: docker_file
+    container_name: astk_node-angular
+    depends_on:
+      - redis
+      - db
+    environment:
+      - REDIS_HOST=redis
+      - MYSQL_HOST=db
+    tty: true
+    command: ["bash", "-c", "tail -f /dev/null"]
+    hostname: node_dev
+    network_mode: host
+    dns: 8.8.8.8
+    volumes:
+      - type: bind
+        source: ./app/
+        target: /app
+
+volumes:
+  db_data:
