@@ -49,8 +49,11 @@ services:
     dns: 8.8.8.8
     volumes:
       - type: bind
-        source: ./app/
-        target: /app
+        source: ../node/
+        target: /app/node
+      - type: bind
+        source: ../angular/
+        target: /app/angular
 
 volumes:
   db_data:
