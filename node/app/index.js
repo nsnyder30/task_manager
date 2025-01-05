@@ -12,7 +12,10 @@ console.log(config.redisStore.url);
 
 const app = express();
 const angular_path = path.join(__dirname, '..', 'node_modules', 'angular_build');
-const redisClient = createClient({ url: config.redisStore.url });
+const redisClient = createClient({
+	url: config.redisStore.url, 
+	password: config.redisStore.password
+});
 
 require('./authentication').init(app);
 
@@ -22,6 +25,7 @@ app.use(session({
 	store: new rs.RedisStore({
 		client: redisClient
 	}), 
+	password: config.redisStore.password, 
 	secret: config.redisStore.secret, 
 	resave: false, 
 	saveUninitialized: false

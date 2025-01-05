@@ -1,6 +1,7 @@
 {
 	"redisStore": {
 		"url": "redis://localhost:6379", 
-		"secret": "my-secret-key"
+		"secret": "my-secret-key", 
+		"password": "redispass"
 	}
 }
