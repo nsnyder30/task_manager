@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "angular_build": "file:../angular_app/dist/angular_app",
+    "angular_build": "file:../angular/dist/angular_app",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "config": "^3.3.12",
