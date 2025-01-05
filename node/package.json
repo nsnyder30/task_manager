@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "angular_build": "file:../angular_app/dist/angular_app",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
+    "config": "^3.3.12",
+    "connect-redis": "^8.0.1",
+    "cors": "^2.8.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.18.1",
+    "nodemon": "^3.1.7",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "redis": "^4.7.0"
+  }
+}
