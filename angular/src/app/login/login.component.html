@@ -1,19 +1,25 @@
-I<form action="/login" method="POST">
+<form action="/login" method="POST" class="login-form translate-middle position-absolute px-4 pb-4 pt-1 rounded-3 bg-body-secondary border border-dark">
 	<table>
 		<tr>
-			<td class="text-right text-nowrap font-weight-bold">Username:</td>
+			<td class="text-left text-nowrap fw-bold pt-1">Username</td>
+		</tr>
+		<tr>
 			<td class="text-left text-nowrap">
-				<input name="username" id="username" type="text" placeholder="Enter username">
+				<input class="w-100 rounded p-1" name="username" id="username" type="text" placeholder="Enter Username" autofocus>
 			</td>
 		</tr>
 		<tr>
-			<td class="text-right text-nowrap font-weight-bold">Password:</td>
+			<td class="text-left tesxt-nowrap fw-bold pt-1">Password</td>
+		</tr>
+		<tr>
 			<td class="text-left text-nowrap">
-				<input name="password" id="password" type="password" placeholder="Enter password">
+				<input class="w-100 rounded p-1" name="password" id="password" type="password" placeholder="Enter password">
 			</td>
 		</tr>
 		<tr>
-			<td class="text-right" colspan="2"><input type="submit"></td>
+			<td class="text-center text-nowrap pt-3">
+				<button type="submit" class="btn btn-sm w-100 a-clickable btn-success">Login</button>
+			</td>
 		</tr>
 	</table>
 </form>
