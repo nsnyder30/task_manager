@@ -6,21 +6,21 @@ const saltRounds = 10;
 const ptPass = 'hashword';
 const salt = bcrypt.genSaltSync(saltRounds);
 const passwordHash = bcrypt.hashSync(ptPass, salt);
-
-const user = {
-	username: 'test-user',
-	passwordHash: passwordHash, 
-	id: 1
-}
+const { get_user } = require('../datasources/task_manager');
 
 // app.get('/profile', passport.authenticationMiddleware(), renderProfile);
 
 function findUser(username, callback) {
-	if ( username === user.username ) {
-		return callback(null, user);
-	}
-	return callback(null);
-}
+	get_user({ username: username })
+	.then(usearch => {
+		if ( usearch.res == 1 ) {
+			return callback(null, usearch.user);
+		}
+		return callback(null, null);
+	}).catch(err => {
+		return callback(err);
+	});
+};
 
 passport.serializeUser(function (user, cb) {
 	cb(null, user.username);
@@ -48,7 +48,6 @@ function initPassport () {
 					if (err) {
 						return done(err)
 					}
-
 					if(!isValid) {
 						return done(null, false)
 					}

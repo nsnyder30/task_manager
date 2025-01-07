@@ -7,6 +7,7 @@ const session = require('express-session');
 const { createClient } = require('redis');
 const rs = require('connect-redis');
 const config = require('config');
+const { create_user } = require('./datasources/task_manager');
 
 console.log(config.redisStore.url);
 
@@ -57,10 +58,24 @@ app.post('/login', (req, res, next) => {
 	})(req, res, next);
 })
 */
+
 app.post('/login', passport.authenticate('local', {
 	successRedirect: '/test', 
 	failureRedirect: ''
 }));
+
+app.post('/create', async (req, res) => {
+        const {username, password } = req.body;
+
+        try {
+                await create_user({ username: username, password: password });
+                res.redirect('/');
+
+        } catch (err) {
+                console.error(err);
+                res.status(500).json({ message: 'An error creating a new user occured' });
+        }
+});
 
 app.get('/api/hello', (req, res) => {
 	console.log('api/hello triggered');

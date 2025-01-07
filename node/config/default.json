@@ -1,4 +1,10 @@
 {
+	"db": {
+		"host": "localhost", 
+		"user":"task_user", 
+		"password": "taskpass", 
+		"name": "task_manager"
+	},
 	"redisStore": {
 		"url": "redis://localhost:6379", 
 		"secret": "my-secret-key", 
