@@ -6,15 +6,18 @@ import { AppComponent } from './app.component';
 import { TestComponent } from './test/test.component';
 import { TutorialComponent } from './tutorial/tutorial.component';
 import { LoginComponent } from './login/login.component';
+import { CreateAccountComponent } from './create-account/create-account.component';
 
 const routes: Routes = [
 	{path: '', component: LoginComponent},
 	{path: 'test', component: TestComponent}, 
-	{path: 'tutorial', component: TutorialComponent}
+	{path: 'tutorial', component: TutorialComponent}, 
+	{path: 'create-account', component: CreateAccountComponent}
 ]
 
 @NgModule({
 	declarations: [
+  		CreateAccountComponent,
 		AppComponent, 
 		LoginComponent, 
 		TestComponent,
