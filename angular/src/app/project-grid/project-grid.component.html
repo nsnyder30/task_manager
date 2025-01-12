@@ -1,0 +1,10 @@
+<div class="project-controls">
+	<button class="btn btn-sm btn-info" (click)="createProject()">Create New Project</button>
+</div>
+
+<div class="project-grid">
+	<div *ngFor="let project of projects" class="project-card">
+		{{ project | json }}
+	</div>
+</div>
+
