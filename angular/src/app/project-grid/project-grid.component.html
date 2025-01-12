@@ -1,10 +1,11 @@
-<div class="project-controls">
+<div class="project-controls p-2">
 	<button class="btn btn-sm btn-info" (click)="createProject()">Create New Project</button>
 </div>
 
-<div class="project-grid">
-	<div *ngFor="let project of projects" class="project-card">
-		{{ project | json }}
+<div class="project-grid p-2">
+	<div *ngFor="let project of projects" class="project-card border border-dark-subtle rounded p-1 mb-2">
+		<h5>{{project.tsk_name}}</h5>
+		<!-- {{ project | json }} -->
 	</div>
 </div>
 
