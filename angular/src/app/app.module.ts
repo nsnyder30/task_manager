@@ -7,12 +7,16 @@ import { TestComponent } from './test/test.component';
 import { TutorialComponent } from './tutorial/tutorial.component';
 import { LoginComponent } from './login/login.component';
 import { CreateAccountComponent } from './create-account/create-account.component';
+import { ProjectGridComponent } from './project-grid/project-grid.component';
+import { CalendarComponent } from './calendar/calendar.component';
 
 const routes: Routes = [
 	{path: '', component: LoginComponent},
 	{path: 'test', component: TestComponent}, 
 	{path: 'tutorial', component: TutorialComponent}, 
-	{path: 'create-account', component: CreateAccountComponent}
+	{path: 'create-account', component: CreateAccountComponent}, 
+	{path: 'home', component: ProjectGridComponent}, 
+	{path: 'calendar', component: CalendarComponent}
 ]
 
 @NgModule({
@@ -22,6 +26,8 @@ const routes: Routes = [
 		LoginComponent, 
 		TestComponent,
 		TutorialComponent,
+		ProjectGridComponent,
+		CalendarComponent,
 	], 
 	imports: [
 		BrowserModule, 
