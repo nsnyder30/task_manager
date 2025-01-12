@@ -7,9 +7,7 @@ const session = require('express-session');
 const { createClient } = require('redis');
 const rs = require('connect-redis');
 const config = require('config');
-const { create_user } = require('./datasources/task_manager');
-
-console.log(config.redisStore.url);
+const { get_user, create_user, get_tasks } = require('./datasources/task_manager');
 
 const app = express();
 const angular_path = path.join(__dirname, '..', 'node_modules', 'angular_build');
@@ -64,7 +62,7 @@ app.post('/login', passport.authenticate('local', {
 	failureRedirect: ''
 }));
 
-app.post('/create', async (req, res) => {
+app.post('/api/create', async (req, res) => {
         const {username, password } = req.body;
 
         try {
@@ -77,13 +75,44 @@ app.post('/create', async (req, res) => {
         }
 });
 
+app.get('/api/task/by_user/:user_id', (req, res) => {
+	const user_id = Number(req.params.user_id);
+console.log('fetch task by user triggered');
+
+	get_tasks({ user_id: user_id })
+	.then(result => {
+console.log({msg: 'tasks returned', tasks: JSON.stringify(result, null, 2)});
+		if(result.res == 1 && Array.isArray(result.tasks)) {
+			res.json(result.tasks);
+		} else {
+			res.status(404).json({message: 'Non tasks found for the given user'});
+		}
+	}).catch(err => {
+		console.error(`Unable to find tasks associated with user ${user_id}`);
+		res.status(500).json({ error: 'Database query failed' });
+	});
+});
+
+app.get('/api/task/by_task/:task_id', (req, res) => {
+console.log('fetch task by task id triggered');
+	const task_id = req.params.task_id;
+	/* get_tasks NOT IMPLEMENTED YET
+	 * const task = await get_tasks({task_id: task_id});
+	 *
+	 * if(task.res == -1) {
+	 * console.error(`Unable to find task associated with task_id ${task_id}`);
+	 * res.status(500).json({ error: 'Database query failed' });
+	 * }
+	*/
+	res.json({task_id});
+});
+
 app.get('/api/hello', (req, res) => {
-	console.log('api/hello triggered');
 	res.json({message: 'Hello from Node.js!' });
 });
 
 app.get('*', (req, res) => {
-	console.log('Catchall triggered');
+console.log('catchall triggered');
 	res.sendFile(path.join(angular_path, 'browser', 'index.html'));
 });
 
