@@ -39,7 +39,6 @@ app.use(express.static(path.join(angular_path, 'browser')));
 
 /*
 app.post('/login', (req, res, next) => {
-	console.log({msg: 'login page called', req: req});
 	const { username, password } = req.body;
 	res.json({message: 'You have reached the login page'});
 })
@@ -77,11 +76,9 @@ app.post('/api/create', async (req, res) => {
 
 app.get('/api/task/by_user/:user_id', (req, res) => {
 	const user_id = Number(req.params.user_id);
-console.log('fetch task by user triggered');
 
 	get_tasks({ user_id: user_id })
 	.then(result => {
-console.log({msg: 'tasks returned', tasks: JSON.stringify(result, null, 2)});
 		if(result.res == 1 && Array.isArray(result.tasks)) {
 			res.json(result.tasks);
 		} else {
@@ -94,7 +91,6 @@ console.log({msg: 'tasks returned', tasks: JSON.stringify(result, null, 2)});
 });
 
 app.get('/api/task/by_task/:task_id', (req, res) => {
-console.log('fetch task by task id triggered');
 	const task_id = req.params.task_id;
 	/* get_tasks NOT IMPLEMENTED YET
 	 * const task = await get_tasks({task_id: task_id});
@@ -112,7 +108,6 @@ app.get('/api/hello', (req, res) => {
 });
 
 app.get('*', (req, res) => {
-console.log('catchall triggered');
 	res.sendFile(path.join(angular_path, 'browser', 'index.html'));
 });
 

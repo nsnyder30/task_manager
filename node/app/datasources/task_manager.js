@@ -8,7 +8,6 @@ const hash_password = async (password) => {
 };
 
 const user_condition = async (user_data) => {
-console.log({msg: 'user condition called', user_data: user_data});
 	let params = null;
 
 	if(typeof user_data == 'string') {
@@ -16,7 +15,6 @@ console.log({msg: 'user condition called', user_data: user_data});
 	} else if (typeof user_data == 'number') {
 		user_data = {user_id: user_data};
 	}
-console.log({user_data:user_data});
 
 	if(typeof user_data != 'object') {
 		return {res: -1, msg: "'Incorrect data type provided for user_data. Expected 'object' but got '"+(typeof user_data)+"'"};
@@ -32,17 +30,14 @@ console.log({user_data:user_data});
 }
 
 const task_condition = async (task_data) => {
-console.log({msg: 'task condition called', task_data: task_data});
 	if(typeof task_data == 'number') {
 		task_data = {task_id: task_data};
 	}
-console.log({task_data: task_data});
 	if(typeof task_data.task_id == 'number') {
 		return {res: 1, field: 'tsk_id', value: task_data.task_id};
 	}
 
 	const user_params = user_condition(task_data);
-console.log({user_params: user_params});
 	if(user_params.res == -1) {
 		return {res: -1, msg: "No task id provided in task_data input"};
 	}
@@ -108,15 +103,13 @@ const create_user = async (user_data) => {
 };
 
 const get_tasks = async (task_data) => {
-console.log({msg: 'get tasks called', task_data: task_data});
 	const params = await task_condition(task_data);
-console.log({params: params});
 	if(params.res == -1) {
 		return params;
 	}
 
 	try {
-		const query = `SELECT tsk_id, tsk_status, tsk_owner, tsk_parent, tsk_level 
+		const query = `SELECT tsk_id, tsk_name, tsk_status, tsk_owner, tsk_parent, tsk_level 
 				 FROM tasks 
    			   INNER JOIN tm_users ON usr_id = tsk_owner 
 				WHERE ${params.field} = ?`;
@@ -126,7 +119,6 @@ console.log({params: params});
 		if (recs.length == 0) {
 			return {res: 0, msg: 'No data returned'};
 		}
-console.log({msg: 'Task data retrieved', tasks: JSON.stringify(recs, null, 2)});
 		return {res: 1, tasks: recs};
 	} catch (err) {
 		console.error(err);
