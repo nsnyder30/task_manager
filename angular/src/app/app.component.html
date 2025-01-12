@@ -1,9 +1,18 @@
+<!-- SIDE PANEL NAVBAR -->
 <div class="spanel spanel--left bg-dark pt-1 text-center border border-secondary">
-	<div class="c-imageswap py-1 nav-icon">
-		<a [routerLink]="['/home']" class="btn btn-outline-primary rounded-circle p-3">
-			<img src="assets/images/home-icon.png" class="sidebar-icon" title="Home">
-		</a>
+	<div class="py-1 nav-icon">
+		<img [routerLink]="['/home']" src="assets/images/home_icon_white.png" class="sidebar-icon" title="Home">
+	</div>
+	<div class="py-1 nav-icon">
+		<img [routerLink]="['/account']" src="assets/images/user_icon_white.png" class="sidebar-icon" title="Home">
+	</div>
+	<div class="py-1 nav-icon">
+		<img [routerLink]="['/calendar']" src="assets/images/calendar_white.png" class="sidebar-icon" title="Home">
 	</div>
 </div>
-<router-outlet></router-outlet>
+
+<!-- MAIN PANEL -->
+<div class="mpanel">
+	<router-outlet></router-outlet>
+</div>
 
