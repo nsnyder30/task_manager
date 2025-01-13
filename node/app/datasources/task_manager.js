@@ -109,17 +109,43 @@ const get_tasks = async (task_data) => {
 	}
 
 	try {
-		const query = `SELECT tsk_id, tsk_name, tsk_status, tsk_owner, tsk_parent, tsk_level 
-				 FROM tasks 
-   			   INNER JOIN tm_users ON usr_id = tsk_owner 
-				WHERE ${params.field} = ?`;
-		const [recs] = await pool.execute(query, [params.value]);
+		let query = `SELECT tsk_id, tsk_name, tsk_status, tsk_owner, tsk_parent, tsk_level 
+			   FROM tasks 
+   		     INNER JOIN tm_users ON usr_id = tsk_owner 
+			  WHERE ${params.field} = ?`;
+		let [tasks] = await pool.execute(query, [params.value]);
 
+		
+		let task_list = {};
+		for(tsk of tasks) {
+			tsk.activities = [];
+			tsk.active = false;
+			task_list[tsk.tsk_id] = tsk;
+		}
+		
 
-		if (recs.length == 0) {
+		query = `SELECT act_id, act_owner, act_task_id, act_start_time, act_end_time, act_uid, 
+				    act_recurrence, act_interval, act_frequency, act_weekdays, act_monthdates, 
+				    act_start_date, act_end_date, act_status 
+			       FROM activity 
+			 INNER JOIN tasks ON tsk_id = act_task_id 
+			 INNER JOIN tm_users ON usr_id = tsk_owner 
+			      WHERE ${params.field} = ?`;
+		let [activities] = await pool.execute(query, [params.value]);
+		
+		for(act of activities) {
+			if(act.act_task_id in task_list) {
+				task_list[act.act_task_id].activities.push(act);
+				task_list[act.act_task_id].active = task_list[act.act_task_id].active || (act.act_start_time && !act.act_end_time);
+			}
+		}
+		
+		tasks = Object.keys(task_list).map(function(k){return task_list[k];});
+
+		if (tasks.length == 0) {
 			return {res: 0, msg: 'No data returned'};
 		}
-		return {res: 1, tasks: recs};
+		return {res: 1, tasks: tasks, activities: activities};
 	} catch (err) {
 		console.error(err);
 		return {res: -1, msg: err};
