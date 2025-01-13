@@ -16,10 +16,8 @@ export class ProjectGridComponent implements OnInit {
 
 	ngOnInit(): void {
 		const userId = 1;
-console.log('ANGULAR: project grid component loaded');
 
 		this.taskService.getTasks(userId).subscribe((data) => {
-console.log({msg: 'getTasks returned data', data:data});
 			this.projects = data;
 		});
 	}

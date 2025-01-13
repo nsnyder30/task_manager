@@ -9,3 +9,7 @@
 .project-card {
 
 }
+
+.project-card .button {
+	width: 5%;
+}

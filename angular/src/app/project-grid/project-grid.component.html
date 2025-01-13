@@ -4,8 +4,15 @@
 
 <div class="project-grid p-2">
 	<div *ngFor="let project of projects" class="project-card border border-dark-subtle rounded p-1 mb-2">
-		<h5>{{project.tsk_name}}</h5>
+		<table class="w-100">
+			<tr>
+				<td class="text-left text-nowrap fw-bold">{{project.tsk_name}}</td>
+				<td class="text-end text-nowrap">
+					<img src="assets/images/play_icon_green.png" class="a-clickable button" [hidden]="project.active">
+					<img src="assets/images/stop_icon_red.png" class="a-clickable button" [hidden]="!project.active">
+				</td>
+			</tr>
+		</table>
 		<!-- {{ project | json }} -->
 	</div>
 </div>
-
