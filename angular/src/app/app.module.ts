@@ -9,6 +9,7 @@ import { LoginComponent } from './login/login.component';
 import { CreateAccountComponent } from './create-account/create-account.component';
 import { ProjectGridComponent } from './project-grid/project-grid.component';
 import { CalendarComponent } from './calendar/calendar.component';
+import { DatePipe } from '@angular/common';
 
 const routes: Routes = [
 	{path: '', component: LoginComponent},
@@ -39,6 +40,7 @@ const routes: Routes = [
 		RouterModule,
 		RouterOutlet
 	], 
+	providers: [DatePipe], 
 	bootstrap: [AppComponent]
 })
 
