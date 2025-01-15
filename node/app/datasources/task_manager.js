@@ -1,12 +1,51 @@
+const { z } = require('zod');
 const bcrypt = require('bcrypt');
 const pool = require('../../db');
 const saltRounds = 10;
 
+// METHOD FOR VALIDATING INPUT OBJECTS AND RETURNING QUERY FIELDS AND PARAMETERS
+const parse_insert_params = async (data, schema, field_map) => {
+	let validated_data;
+	try {
+		validated_data = schema.parse(data);
+	} catch (err) {
+		return {error: true, 
+			msg: 'Validation failed', 
+			issues: err.issues || err
+		}
+	}
+
+	let fields = [];
+	let values = [];
+
+	for(const k of Object.keys(field_map)) {
+		if (validated_data[k] == undefined) {
+			continue;
+		}
+
+		let v = 
+			k === 'password' 
+			? await hash_password(validated_data[k]) 
+			: validated_data[k];
+
+		fields.push(field_map[k]);
+		values.push(v);
+	}
+
+	if(fields.length == 0) {
+		return {error: true, msg: 'No valid key-value pairs were provided'};
+	}
+
+	return {error: false, fields, values};
+}
+
+// SIMPLE HASHING UTILITY
 const hash_password = async (password) => {
 	const hash = await bcrypt.hash(password, saltRounds);
 	return hash;
 };
 
+// DYNAMIC UTILITY FOR TRANSLATING USER DATA TO QUERY CONDITIONS
 const user_condition = async (user_data) => {
 	let params = null;
 
@@ -23,12 +62,13 @@ const user_condition = async (user_data) => {
 	if(typeof user_data.user_id == 'number') {
 		return {res: 1, field: "usr_id", value: user_data.user_id};
 	} else if (typeof user_data.username == 'string') {
-		return {res: 1, field: "usr_username", value: "'"+user_data.username+"'"};
+		return {res: 1, field: "usr_username", value: user_data.username};
 	}
 	
 	return {res: -1, msg: "No username or user id provided in user_data input"};
 }
 
+// DYNAMIC UTILITY FOR TRANSLATING TASK DATA TO QUERY CONDITIONS
 const task_condition = async (task_data) => {
 	if(typeof task_data == 'number') {
 		task_data = {task_id: task_data};
@@ -45,6 +85,7 @@ const task_condition = async (task_data) => {
 	return user_params;
 }
 
+// METHOD: RETRIEVE USER
 const get_user = async (user_data) => {
 	const params = await user_condition(user_data);
 
@@ -70,38 +111,40 @@ const get_user = async (user_data) => {
 	}
 };
 
-// This method can probably be abstracted to a general INSERT command
-// passing field map as an input argument
+// DEFINE USER SCHEMA AND FIELD MAP FOR PARSE_INPUT_PARAMS METHOD
+const user_schema = z.object({
+	username: z.string().min(1, 'Username is required'), 
+	password: z.string().min(1, 'Password is required'), 
+	first: z.string().optional(), 
+	last: z.string().optional(), 
+	email: z.string().email('Invalid email format').optional()
+});
+
+const user_field_map = {
+	username: 'usr_username', 
+	password: 'usr_pwhash', 
+	first: 'usr_first', 
+	last: 'usr_last', 
+	email: 'usr_email'
+}
+
+// METHOD: CREATE NEW USER
 const create_user = async (user_data) => {
-	const passthrough_keys = {
-		username: {type: 'string', required: true, field: 'usr_username'}, 
-		password: {type: 'string', required: true, field: 'usr_pwhash'}, 
-		first: {type: 'string', required: false, field: 'usr_first'}, 
-		last: {type: 'string', required: false, field: 'usr_last'}, 
-		email: {type: 'string', required: false, field: 'usr_email'}
-	};
+	const { error, msg, issues, fields, values } = await parse_insert_params (
+		user_data, 
+		user_schema, 
+		user_field_map
+	);
 
-	let missing_keys = Object.keys(passthrough_keys).filter(function(k) {
-		return passthrough_keys[k].required && !(k in user_data && typeof user_data[k] == passthrough_keys[k].type);
-	});
-
-	if(missing_keys.length > 0) {
-		return {res: 0, msg: 'The following keys were missing from the supplied user data: '+missing_keys.join(', ')};
+	if(error) {
+		return {res: 0, msg, errors: issues};
 	}
 
-	let input_params = Object.keys(passthrough_keys).filter(function(k) {
-		return k in user_data && typeof user_data[k] == passthrough_keys[k].type;
-	}).map(function(k) {
-		let v = k == 'password' ? hash_password(user_data[k]) : user_data[k];
-		return {field: passthrough_keys[k].field, value: v};
-	});
-
-	let fields = input_params.map((p) => p.field);
-	let values = input_params.map((p) => p.value);
 	await pool.execute('INSERT INTO tm_users ('+fields.join(', ')+') VALUES ('+fields.map((f) => '?').join(', ')+')', values);
 	return {res: 1, msg: 'User created'};
 };
 
+// METHOD: RETRIEVE ONE OR MORE TASKS, DEPENDING ON PROVIDED TASK DATA
 const get_tasks = async (task_data) => {
 	const params = await task_condition(task_data);
 	if(params.res == -1) {
@@ -152,4 +195,73 @@ const get_tasks = async (task_data) => {
 	}
 }
 
-module.exports = { get_user, create_user, get_tasks };
+// DEFINE SCHEMA AND FIELD MAP FOR CREATING RECORDS OF CURRENTLY ACTIVE TASKS
+const task_activation_schema = z.object({
+	owner: z.number(),
+	task_id: z.number(), 
+	start_time: z.string(), 
+	uid: z.number()
+});
+
+const task_activation_field_map = {
+	owner: 'act_owner', 
+	task_id: 'act_task_id', 
+	start_time: 'act_start_time', 
+	uid: 'act_uid'
+};
+
+// METHOD: CREATE DATABASE RECORD TO INDICATE TASK IS CURRENTLY ACTIVE
+const activate_task = async (task_data) => {
+	let { error, msg, issues, fields, values } = await parse_insert_params (
+		task_data, 
+		task_activation_schema, 
+		task_activation_field_map
+	);
+	if(error) {
+		return {res: 0, msg, errors: issues};
+	}
+
+	try {
+		let query = `INSERT INTO activity (act_owner, act_task_id, act_start_time, act_uid)
+				  VALUES (?, ?, ?, ?) 
+		 ON DUPLICATE KEY UPDATE act_id = act_id`;
+		const result = await pool.execute(query, values);
+
+		return {res: 1, msg: `Task ${task_data.act_task_id} activated`, task: task_data, dbResult: result};
+	} catch (err) {
+		return {res: -1, msg: 'Task activation failed', err: err};
+	}
+
+	return {res: 0, msg: 'No returns caught', task: task_data};
+}
+
+
+// DEFINE SCHEMA AND FIELD MAP FOR CREATING RECORDS OF CURRENTLY ACTIVE TASKS
+const task_deactivation_schema = z.object({
+	task_id: z.number()
+})
+
+const task_deactivation_field_map = {task_id: 'act_task_id'};
+
+// METHOD: CREATE DATABASE RECORD TO INDICATE TASK IS CURRENTLY ACTIVE
+const deactivate_task = async (task_data) => {
+	const { error, msg, issues, fields, values } = await parse_insert_params (
+		task_data,
+		task_deactivation_schema, 
+		task_deactivation_field_map
+	);
+	if(error) {
+		return {res: 0, msg, error: error}
+	}
+	try {
+		let query = `UPDATE activity SET act_end_time = CURRENT_TIMESTAMP() WHERE act_task_id = ${task_data.task_id}`;
+		const result = await pool.execute(query, []);
+
+
+		return {res: 1, msg: `Task ${task_data.act_task_id} deactivated`, task: task_data, dbResult: result};
+	} catch (err) {
+		return {res: -1, msg: 'Task deactivation failed', err: err};
+	}
+}
+
+module.exports = { get_user, create_user, get_tasks , activate_task, deactivate_task };

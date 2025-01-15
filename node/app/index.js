@@ -3,11 +3,10 @@ const cors = require('cors');
 const express = require('express');
 const passport = require('passport');
 const session = require('express-session');
-//const rs = require('connect-redis').default;
 const { createClient } = require('redis');
 const rs = require('connect-redis');
 const config = require('config');
-const { get_user, create_user, get_tasks } = require('./datasources/task_manager');
+const { get_user, create_user, get_tasks, activate_task, deactivate_task } = require('./datasources/task_manager');
 
 const app = express();
 const angular_path = path.join(__dirname, '..', 'node_modules', 'angular_build');
@@ -19,7 +18,6 @@ const redisClient = createClient({
 require('./authentication').init(app);
 
 redisClient.connect().catch(console.error);
-// const RedisStore = rs(session);
 app.use(session({
 	store: new rs.RedisStore({
 		client: redisClient
@@ -36,25 +34,6 @@ app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(angular_path, 'browser')));
-
-/*
-app.post('/login', (req, res, next) => {
-	const { username, password } = req.body;
-	res.json({message: 'You have reached the login page'});
-})
-*/
-/* EXAMPLE OF CUSTOM LOGIC FOR LOGIN METHOD THAT STIL INCORPORATES PASSPORT AUTHENTICATION
-app.post('/login', (req, res, next) => {
-	passport.authenticate('local', (err, user, info) => {
-		if (err) return next(err);
-		if (!user) return res.redirect('');
-		req.login(user, (err) => {
-			if (err) return next(err);
-			return res.redirect('/dashboard');
-		});
-	})(req, res, next);
-})
-*/
 
 app.post('/login', passport.authenticate('local', {
 	successRedirect: '/test', 
@@ -103,7 +82,33 @@ app.get('/api/task/by_task/:task_id', (req, res) => {
 	res.json({task_id});
 });
 
-app.get('/api/hello', (req, res) => {
+app.post('/api/task/activate', (req, res) => {
+	let { task_id, owner, uid, start_time } = req.body;
+	task_id = Number(task_id);
+	owner = Number(owner);
+	uid = Number(uid);
+
+	activate_task({ task_id: task_id, owner: owner, uid: uid, start_time: start_time })
+	.then(result => {
+		return res.json(result.task);
+	}).catch(err => {
+		console.error({msg: `Failed to activate task ${task_id}`, err: err});
+		res.status(500).json({ error: 'Task activation failed' });
+	});
+});
+
+app.post('/api/task/deactivate/', (req, res) => {
+	const task_id = Number(req.body.task_id);
+	deactivate_task({ task_id: task_id })
+	.then(result => {
+		return res.json(result.task);
+	}).catch(err => {
+		console.error(`Failed to deactivate task ${task_id}`);
+		res.status(500).json({ error: 'Task deactivation failed' });
+	});
+});
+
+	app.get('/api/hello', (req, res) => {
 	res.json({message: 'Hello from Node.js!' });
 });
 
