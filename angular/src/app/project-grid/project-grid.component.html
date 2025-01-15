@@ -8,8 +8,8 @@
 			<tr>
 				<td class="text-left text-nowrap fw-bold">{{project.tsk_name}}</td>
 				<td class="text-end text-nowrap">
-					<img src="assets/images/play_icon_green.png" class="a-clickable button" [hidden]="project.active">
-					<img src="assets/images/stop_icon_red.png" class="a-clickable button" [hidden]="!project.active">
+					<img src="assets/images/play_icon_green.png" class="a-clickable button" [hidden]="project.active" (click)="toggleTask(project)">
+					<img src="assets/images/stop_icon_red.png" class="a-clickable button" [hidden]="!project.active" (click)="toggleTask(project)">
 				</td>
 			</tr>
 		</table>
