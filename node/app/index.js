@@ -7,6 +7,8 @@ const { createClient } = require('redis');
 const rs = require('connect-redis');
 const config = require('config');
 const { get_user, create_user, get_tasks, activate_task, deactivate_task } = require('./datasources/task_manager');
+const errorHandler = require('./utils/error_handler');
+const CustomError = require('./utils/custom_error');
 
 const app = express();
 const angular_path = path.join(__dirname, '..', 'node_modules', 'angular_build');
@@ -92,8 +94,9 @@ app.post('/api/task/activate', (req, res) => {
 	.then(result => {
 		return res.json(result.task);
 	}).catch(err => {
-		console.error({msg: `Failed to activate task ${task_id}`, err: err});
-		res.status(500).json({ error: 'Task activation failed' });
+		wrappedError = new CustomError(`Task activation failed`, 400, { method: 'Task activation api endpoint'} );
+		wrappedError.stack = `${wrappedError.stack}\nCaused by: ${err.stack}`;
+		throw wrappedError;
 	});
 });
 
@@ -116,5 +119,6 @@ app.get('*', (req, res) => {
 	res.sendFile(path.join(angular_path, 'browser', 'index.html'));
 });
 
+app.use(errorHandler);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

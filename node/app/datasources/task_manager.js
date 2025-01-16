@@ -1,19 +1,13 @@
 const { z } = require('zod');
 const bcrypt = require('bcrypt');
 const pool = require('../../db');
+const CustomError = require('../utils/custom_error');
 const saltRounds = 10;
 
 // METHOD FOR VALIDATING INPUT OBJECTS AND RETURNING QUERY FIELDS AND PARAMETERS
 const parse_insert_params = async (data, schema, field_map) => {
 	let validated_data;
-	try {
-		validated_data = schema.parse(data);
-	} catch (err) {
-		return {error: true, 
-			msg: 'Validation failed', 
-			issues: err.issues || err
-		}
-	}
+	validated_data = schema.parse(data);
 
 	let fields = [];
 	let values = [];
@@ -32,7 +26,9 @@ const parse_insert_params = async (data, schema, field_map) => {
 		values.push(v);
 	}
 
+fields = [];
 	if(fields.length == 0) {
+		throw new CustomError(`No valid key-value pairs were provided`, 400, {data, schema, field_map});
 		return {error: true, msg: 'No valid key-value pairs were provided'};
 	}
 
@@ -56,14 +52,16 @@ const user_condition = async (user_data) => {
 	}
 
 	if(typeof user_data != 'object') {
-		return {res: -1, msg: "'Incorrect data type provided for user_data. Expected 'object' but got '"+(typeof user_data)+"'"};
+		return {msg: "'Incorrect data type provided for user_data. Expected 'object' but got '"+(typeof user_data)+"'"};
 	}
 
 	if(typeof user_data.user_id == 'number') {
-		return {res: 1, field: "usr_id", value: user_data.user_id};
+		return {field: "usr_id", value: user_data.user_id};
 	} else if (typeof user_data.username == 'string') {
-		return {res: 1, field: "usr_username", value: user_data.username};
+		return {field: "usr_username", value: user_data.username};
 	}
+
+	throw new CustomError(`No username or user id provided in user_data input`, 400, { user_data });
 	
 	return {res: -1, msg: "No username or user id provided in user_data input"};
 }
