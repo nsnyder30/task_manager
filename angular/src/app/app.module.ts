@@ -10,6 +10,7 @@ import { CreateAccountComponent } from './create-account/create-account.componen
 import { ProjectGridComponent } from './project-grid/project-grid.component';
 import { CalendarComponent } from './calendar/calendar.component';
 import { DatePipe } from '@angular/common';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 const routes: Routes = [
 	{path: '', component: LoginComponent},
@@ -34,7 +35,8 @@ const routes: Routes = [
 		BrowserModule, 
 		HttpClientModule, 
 		RouterOutlet, 
-		RouterModule.forRoot(routes)
+		RouterModule.forRoot(routes), 
+		BrowserAnimationsModule
 	], 
 	exports: [
 		RouterModule,
