@@ -25,7 +25,7 @@ export class CalendarComponent {
 			date.setFullYear(date.getFullYear() + sgn);
 		} else if (this.view === 'Monthly') {
 			date.setMonth(date.getMonth() + sgn);
-		} else if (this.view === 'Weekl') {
+		} else if (this.view === 'Weekly') {
 			date.setDate(date.getDate() + sgn * 7);
 		} else if (this.view === 'Daily') {
 			date.setDate(date.getDate() + sgn);
