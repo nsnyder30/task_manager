@@ -50,8 +50,7 @@ app.post('/api/create', async (req, res) => {
                 res.redirect('/');
 
         } catch (err) {
-                console.error(err);
-                res.status(500).json({ message: 'An error creating a new user occured' });
+		throw new CustomError(`An error occured while creating a new record`, 400, {}, err);
         }
 });
 
@@ -60,14 +59,10 @@ app.get('/api/task/by_user/:user_id', (req, res) => {
 
 	get_tasks({ user_id: user_id })
 	.then(result => {
-		if(result.res == 1 && Array.isArray(result.tasks)) {
-			res.json(result.tasks);
-		} else {
-			res.status(404).json({message: 'Non tasks found for the given user'});
-		}
+		const tasks = Array.isArray(result.tasks) ? result.tasks : {};
+		res.json( tasks );
 	}).catch(err => {
-		console.error(`Unable to find tasks associated with user ${user_id}`);
-		res.status(500).json({ error: 'Database query failed' });
+		throw new CustomError(`Unable to find tasks associated with user ${user_id}`, 400, { user_id }, err);
 	});
 });
 
@@ -94,9 +89,7 @@ app.post('/api/task/activate', (req, res) => {
 	.then(result => {
 		return res.json(result.task);
 	}).catch(err => {
-		wrappedError = new CustomError(`Task activation failed`, 400, { method: 'Task activation api endpoint'} );
-		wrappedError.stack = `${wrappedError.stack}\nCaused by: ${err.stack}`;
-		throw wrappedError;
+		throw new CustomError(`Task activation failed`, 400, { method: 'Task activation api endpoint'}, err);
 	});
 });
 
@@ -106,12 +99,11 @@ app.post('/api/task/deactivate/', (req, res) => {
 	.then(result => {
 		return res.json(result.task);
 	}).catch(err => {
-		console.error(`Failed to deactivate task ${task_id}`);
-		res.status(500).json({ error: 'Task deactivation failed' });
+		throw new CustomError(`Failed to deactivate task ${task_id}`, 400, { task_id }, err);
 	});
 });
 
-	app.get('/api/hello', (req, res) => {
+app.get('/api/hello', (req, res) => {
 	res.json({message: 'Hello from Node.js!' });
 });
 

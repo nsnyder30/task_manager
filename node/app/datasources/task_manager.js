@@ -26,13 +26,11 @@ const parse_insert_params = async (data, schema, field_map) => {
 		values.push(v);
 	}
 
-fields = [];
 	if(fields.length == 0) {
 		throw new CustomError(`No valid key-value pairs were provided`, 400, {data, schema, field_map});
-		return {error: true, msg: 'No valid key-value pairs were provided'};
 	}
 
-	return {error: false, fields, values};
+	return {fields, values};
 }
 
 // SIMPLE HASHING UTILITY
@@ -52,7 +50,7 @@ const user_condition = async (user_data) => {
 	}
 
 	if(typeof user_data != 'object') {
-		return {msg: "'Incorrect data type provided for user_data. Expected 'object' but got '"+(typeof user_data)+"'"};
+		throw new CustomError(`Incorrect data type provided for user_data. Expected 'object' but got ${typeof user_data}`, 400, { user_data });
 	}
 
 	if(typeof user_data.user_id == 'number') {
@@ -62,8 +60,6 @@ const user_condition = async (user_data) => {
 	}
 
 	throw new CustomError(`No username or user id provided in user_data input`, 400, { user_data });
-	
-	return {res: -1, msg: "No username or user id provided in user_data input"};
 }
 
 // DYNAMIC UTILITY FOR TRANSLATING TASK DATA TO QUERY CONDITIONS
@@ -72,12 +68,12 @@ const task_condition = async (task_data) => {
 		task_data = {task_id: task_data};
 	}
 	if(typeof task_data.task_id == 'number') {
-		return {res: 1, field: 'tsk_id', value: task_data.task_id};
+		return {field: 'tsk_id', value: task_data.task_id};
 	}
 
 	const user_params = user_condition(task_data);
 	if(user_params.res == -1) {
-		return {res: -1, msg: "No task id provided in task_data input"};
+		throw new CustomError(`No task id provided in task_data input`, 400, { task_data });
 	}
 
 	return user_params;
@@ -87,26 +83,22 @@ const task_condition = async (task_data) => {
 const get_user = async (user_data) => {
 	const params = await user_condition(user_data);
 
-	if(params.res == -1) {
-		return params;
-	}
-
 	try {
 		const query = `SELECT usr_id AS user_id, usr_username AS username, usr_email AS email,                                                                                                                                                usr_first AS firstname, usr_last AS lastname, usr_pwhash AS passwordHash
 				 FROM tm_users
 				WHERE ${params.field} = ?`;
 		const [recs] = await pool.execute(query, [params.value]);
 
-
 		if (recs.length == 0) {
-			return {res: 0, msg: 'No data returned'};
+			throw new CustomError(`No data returned`, 400, { user_data, query, recs });
 		}
-
-		return {res: 1, user: recs[0]};
+		return {user: recs[0]};
 	} catch (err) {
-		console.error(err);
-		return {res: -1, msg: err};
+		throw new CustomError(`get user queries failed`, 400, { user_data }, err);
 	}
+
+	return {msg: err};
+	throw new CustomErrr(`No returns caught by get_user method`, 400, { user_data });
 };
 
 // DEFINE USER SCHEMA AND FIELD MAP FOR PARSE_INPUT_PARAMS METHOD
@@ -128,26 +120,19 @@ const user_field_map = {
 
 // METHOD: CREATE NEW USER
 const create_user = async (user_data) => {
-	const { error, msg, issues, fields, values } = await parse_insert_params (
+	const { fields, values } = await parse_insert_params (
 		user_data, 
 		user_schema, 
 		user_field_map
 	);
 
-	if(error) {
-		return {res: 0, msg, errors: issues};
-	}
-
 	await pool.execute('INSERT INTO tm_users ('+fields.join(', ')+') VALUES ('+fields.map((f) => '?').join(', ')+')', values);
-	return {res: 1, msg: 'User created'};
+	return {msg: 'User created'};
 };
 
 // METHOD: RETRIEVE ONE OR MORE TASKS, DEPENDING ON PROVIDED TASK DATA
 const get_tasks = async (task_data) => {
 	const params = await task_condition(task_data);
-	if(params.res == -1) {
-		return params;
-	}
 
 	try {
 		let query = `SELECT tsk_id, tsk_name, tsk_status, tsk_owner, tsk_parent, tsk_level 
@@ -184,12 +169,12 @@ const get_tasks = async (task_data) => {
 		tasks = Object.keys(task_list).map(function(k){return task_list[k];});
 
 		if (tasks.length == 0) {
-			return {res: 0, msg: 'No data returned'};
+			throw new CustomError(`No data returned by get_tasks method`, 400, { task_data, query, tasks });
 		}
-		return {res: 1, tasks: tasks, activities: activities};
+
+		return {tasks: tasks, activities: activities};
 	} catch (err) {
-		console.error(err);
-		return {res: -1, msg: err};
+		throw new CustomError(`get_tasks method queries failed`, 400, { task_data }, err);
 	}
 }
 
@@ -210,14 +195,11 @@ const task_activation_field_map = {
 
 // METHOD: CREATE DATABASE RECORD TO INDICATE TASK IS CURRENTLY ACTIVE
 const activate_task = async (task_data) => {
-	let { error, msg, issues, fields, values } = await parse_insert_params (
+	let { fields, values } = await parse_insert_params (
 		task_data, 
 		task_activation_schema, 
 		task_activation_field_map
 	);
-	if(error) {
-		return {res: 0, msg, errors: issues};
-	}
 
 	try {
 		let query = `INSERT INTO activity (act_owner, act_task_id, act_start_time, act_uid)
@@ -225,12 +207,10 @@ const activate_task = async (task_data) => {
 		 ON DUPLICATE KEY UPDATE act_id = act_id`;
 		const result = await pool.execute(query, values);
 
-		return {res: 1, msg: `Task ${task_data.act_task_id} activated`, task: task_data, dbResult: result};
+		return {msg: `Task ${task_data.act_task_id} activated`, task: task_data, dbResult: result};
 	} catch (err) {
-		return {res: -1, msg: 'Task activation failed', err: err};
+		throw new CustomError(`Task activation failed`, 400, { task_data }, err);
 	}
-
-	return {res: 0, msg: 'No returns caught', task: task_data};
 }
 
 
