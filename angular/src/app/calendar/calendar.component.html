@@ -1,1 +1,23 @@
-<p>calendar works!</p>
+<div class="calendar-container">
+	<div [@viewTransition]="view">
+		<div *ngIf="view === 'Yearly'" class="year-view">
+			<table class="yearly-calendar">
+				<tr *ngFor="let row of [0, 1, 2]">
+					<td *ngFor="let col of [0, 1, 2, 3]" class="year-cell">
+						<button (click)="switchView('Monthly')">{{ getMonthName(row * 4 + col) }}</button>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<div *ngIf="view === 'Monthly'" class="month-view">
+			<table class="monthly-calendar">
+				<tr *ngFor="let week of getWeeks()">
+					<td *ngFor="let day of week">
+						<button>{{ day }}</button>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</div>
