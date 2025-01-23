@@ -10,7 +10,7 @@
 	left: 0;
 	width: 100%;
 	height: 100%;
-	}
+}
 
 .yearly-calendar, 
 .monthly-calendar {
@@ -20,7 +20,18 @@
 	border-collapse: collapse;
 }
 
-.year-cell, 
+.yearly-calendar tr {
+	height: calc(100% / 3);
+}
+
+.year-cell {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border: 1px solid #ccc;
+	padding: 5px;
+}
+
 .month-view td {
 	text-align: center;
 	vertical-align: middle;
