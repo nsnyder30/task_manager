@@ -9,8 +9,13 @@ const config = require('config');
 const { get_user, create_user, get_tasks, activate_task, deactivate_task } = require('./datasources/task_manager');
 const errorHandler = require('./utils/error_handler');
 const CustomError = require('./utils/custom_error');
+const pino = require('pino-http');
+const logger = require('./utils/logger');
 
 const app = express();
+
+app.use(pino({ logger }));
+
 const angular_path = path.join(__dirname, '..', 'node_modules', 'angular_build');
 const redisClient = createClient({
 	url: config.redisStore.url, 
@@ -113,4 +118,4 @@ app.get('*', (req, res) => {
 
 app.use(errorHandler);
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => logger.info(`Server running on port ${PORT}`));
